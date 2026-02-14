@@ -1,27 +1,21 @@
 from flask import Flask, render_template, request
 import pickle
-import numpy as np
 
 app = Flask(__name__)
 
 model = pickle.load(open("model.pkl","rb"))
+vectorizer = pickle.load(open("vectorizer.pkl","rb"))
 
 @app.route("/", methods=["GET","POST"])
 def index():
-    result = ""
+    prediction = ""
 
     if request.method == "POST":
-        values = [float(x) for x in request.form.values()]
-        final = [np.array(values)]
+        plot = request.form["plot"]
+        vec = vectorizer.transform([plot])
+        prediction = model.predict(vec)[0]
 
-        pred = model.predict(final)[0]
-
-        if pred == 1:
-            result = "⚠ Customer Likely to Churn"
-        else:
-            result = "✅ Customer Will Stay"
-
-    return render_template("index.html", result=result)
+    return render_template("index.html", prediction=prediction)
 
 if __name__ == "__main__":
     app.run(debug=True)
